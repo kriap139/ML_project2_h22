@@ -1,6 +1,6 @@
 import unittest
 from src.BinInt import BinInt
-from src.main import fitness
+from src.main import fitness, mutate
 
 
 class MyTestCase(unittest.TestCase):
@@ -20,11 +20,20 @@ class MyTestCase(unittest.TestCase):
             bitStr = str(bInt)
             self.assertEqual(len(bitStr), length)
 
+    def test_bit_flip(self):
+        n = BinInt("010110")
+        bit = (n >> 2) & 1
+        res = n ^ (bit << 2)
+        self.assertEqual(str(res), "010010")
+
+    def test_mutation(self):
+        bs = BinInt("1111")
+        mutated = mutate(bs, rate=1.0)
+        self.assertEqual(str(mutated), "0000")
+
     def test_BitInt_Ops(self):
         b = BinInt("0110")
         shifted = b >> 1
-        print(shifted)
-        print(shifted.__class__.__name__)
 
     def test_BinInt_Bit_Value(self):
         num = BinInt("01101")

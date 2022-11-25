@@ -1,63 +1,67 @@
 import random
-from typing import Dict
+from typing import Dict, Union
 
 
 class BinInt(int):
     LENGTHS: Dict[int, int] = {}
 
     def __new__(cls, x):
-        value = int.__new__(cls, x, 2)
-        if type(x) == str:
-            cls.LENGTHS[id(value)] = len(x)
+        value = int.__new__(cls, x, base=2)
+        cls.LENGTHS[id(value)] = len(x)
         return value
 
     def __del__(self):
         self.LENGTHS.pop(id(self))
 
     def __str__(self) -> str:
-        value = bin(self)[2:]
-        length = self.LENGTHS[id(self)]
+        return self.__to_bin_str(self, self.get_length())
 
-        if len(value) != length:
-            delta = abs(length - len(value))
-            value = ('0' * delta) + value
-        return value
+    def __repr__(self):
+        return f"BinInt({self.__str__()})"
 
     def __add__(self, other) -> "BinInt":
         new = super(BinInt, self).__add__(other)
-        new = BinInt(new)
-        self.copied(self, new)
-        return new
+        return self.copied(self, new)
 
     def __sub__(self, other) -> "BinInt":
-        val = super(BinInt, self).__sub__(other)
-        return
+        new = super(BinInt, self).__sub__(other)
+        return self.copied(self, new)
 
     def __mul__(self, other) -> "BinInt":
-        val = super(BinInt, self).__mul__(other)
-        return
-
-    def __divmod__(self, other) -> "BinInt":
-        val = super(BinInt, self).__divmod__(other)
-        return
+        new = super(BinInt, self).__mul__(other)
+        return self.copied(self, new)
 
     def __xor__(self, other) -> "BinInt":
-        val = super(BinInt, self).__xor__(other)
-        return
+        new = super(BinInt, self).__xor__(other)
+        return self.copied(self, new)
 
     def __rshift__(self, other) -> "BinInt":
-        val = super(BinInt, self).__rshift__(other)
-        return
+        new = super(BinInt, self).__rshift__(other)
+        return self.copied(self, new)
 
     def __lshift__(self, other) -> "BinInt":
-        return super(BinInt, self).__lshift__(other)
+        new = super(BinInt, self).__lshift__(other)
+        return self.copied(self, new)
 
     def get_length(self) -> int:
         return self.LENGTHS[id(self)]
 
     @classmethod
-    def copied(cls, old: "BinInt", new: "BinInt"):
+    def __to_bin_str(cls, binary: Union["BinInt", int], length: int) -> str:
+        binary = bin(binary)[2:]
+        if len(binary) != length:
+            delta = abs(length - len(binary))
+            binary = ('0' * delta) + binary
+        return binary
+
+    @classmethod
+    def copied(cls, old: "BinInt", new: Union["BinInt", int]) -> "BinInt":
+        if type(new) != BinInt:
+            s = cls.__to_bin_str(new, old.get_length())
+            new = BinInt(s)
+
         cls.LENGTHS[id(new)] = cls.LENGTHS[id(old)]
+        return new
 
     @classmethod
     def create_random(cls, length: int) -> "BinInt":
