@@ -1,101 +1,127 @@
-import src.drawing as draw
-import random
-from typing import List
-from enum import Enum
+import src.util.drawing as draw
+from typing import List, Tuple, Union, Dict
 from src.BinInt import BinInt
-from math import exp
-import bisect
+from src.Selector import Selector, argmax
+import math
+import random
 
 
-def fitness(num: BinInt) -> int:
-    result = 0
-    for i in range(num.get_length()):
-        result += (num >> i) & 1
-    return result
+def mean_gens(acc: List[Dict[int, dict]]) -> Dict[int, dict]:
+    generations = len(acc[0].keys())
+    gens = {gen: dict(best=None, bestFitness=0, meanFitness=0, std=0) for gen in range(generations)}
+
+    currBestFitness = {gen: 0 for gen in range(generations)}
+
+    for it in acc:
+        for gen, data in it.items():
+            gens[gen]["meanFitness"] += data["meanFitness"]
+            gens[gen]["std"] += data["std"]
+
+            bestFitness = data["bestFitness"]
+
+            if bestFitness > currBestFitness[gen]:
+                gens[gen]["best"] = data["best"]
+                currBestFitness[gen] = bestFitness
+
+            gens[gen]["bestFitness"] += bestFitness
+
+    it = float(len(acc))
+
+    for gen, data in gens.items():
+        data["meanFitness"] /= it
+        data["bestFitness"] /= it
+        data["std"] /= it
+
+    return gens
 
 
-def mutate(num: BinInt, rate: float) -> BinInt:
-    length = num.get_length()
-    for i in range(length):
-        r = random.random()
-        if r < rate:
-            bit = (num >> i) & 1
-            num ^= bit << i
-    return num
+def stats(fitnessNums: list) -> Tuple[float, tuple, float]:
+    n = len(fitnessNums)
+    mean = sum(fitnessNums) / n
+    errors = tuple(abs(x - mean) ** 2 for x in fitnessNums)
+    variance = float(sum(errors) / n)
+    return mean, errors, math.sqrt(variance)
 
 
-def probability_distribution(nums_fitness: List[int]) -> List[float]:
-    exps = [exp(x) for x in nums_fitness]
-    summed = sum(exps)
-    return [e / summed for e in exps]
+def record(generation: int, gens: dict, fitnessNums: List[int], fittest: BinInt):
+    mean, errors, std = stats(fitnessNums)
+    gens[generation] = {"best": fittest.copy(), "bestFitness": max(fitnessNums), "meanFitness": mean, "std": std}
 
 
-class Criteria(Enum):
-    KEEP_FITTEST_AND_MUTATE_SELECTED = 0,
-    SELECT_TWO_AND_MUTATE = 1,
-    KEEP_FITTEST_AND_MUTATE_TWO_SELECTED = 2
+def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Dict[str, Union[bool, int]]) -> Tuple[
+    int, List[BinInt]]:
+    population = len(nums)
+    fitnessNums = [num.count() for num in nums]
+    fittest = nums[argmax(fitnessNums)]
+    selector = Selector(nums, fitnessNums, isSorted=False)
+
+    startIdx = 0
+    delta = population
+    unique = criteria["ENSURE_UNIQUE"]
+    newNums = []
+
+    if criteria["KEEP_FITTEST"]:
+        if criteria["MUTATE_FITTEST"]:
+            startIdx = 1
+
+        newNums.append(fittest)
+
+        if criteria["MAKE_FITTEST_A_FRACTION_OF_POPULATION"]:
+            children = round(population * criteria["FITTEST_FRACTION"])
+            delta -= children
+            for i in range(children):
+                newNums.append(fittest)
+
+    selected = selector.select(criteria["k"], unique=unique)
+
+    if type(selected) == BinInt:
+        delta -= 1
+        newNums.append(selected)
+
+        for i in range(delta):
+            newNums.append(selected)
+    else:
+        delta -= len(selected)
+        newNums.extend(selected)
+        for i in range(delta):
+            newNums.append(random.choice(selected))
+
+    record(generation, gens, fitnessNums, fittest)
+    return startIdx, newNums
 
 
-def select(nums: List[BinInt], nums_fitness: List[int],
-           fittesIdx: int, criteria: Criteria) -> List[BinInt]:
+def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=1):
+    criteria = {
+        "KEEP_FITTEST": True,
+        "MUTATE_FITTEST": True,
+        "MAKE_FITTEST_A_FRACTION_OF_POPULATION": True,
+        "ENSURE_UNIQUE": False,
+        "FITTEST_FRACTION": 0.1,
+        "k": 6
+    }
 
-    selected = []
-    dist = probability_distribution(nums_fitness)
+    acc = []
 
-    total = 0
-    cumulative = []
-    for weight in dist:
-        total += weight
-        cumulative.append(total)
+    for _ in range(iterations):
 
-    if criteria == Criteria.KEEP_FITTEST_AND_MUTATE_SELECTED:
-        selected.append(nums[fittesIdx])
+        gens = {}
+        nums = [BinInt.create_random(bits) for _ in range(population)]
+        startIdx, nums = selectCriteria(0, gens, nums, criteria)
 
-        x = random.random() * total
-        i = bisect.bisect(cumulative, x)
-        selected.append(nums[i])
+        for gen in range(1, generations + 1):
+            for i in range(startIdx, len(nums)):
+                nums[i] = BinInt.mutate(nums[i], mutationRate)
 
-    return selected
+            startIdx, nums = selectCriteria(gen, gens, nums, criteria)
 
+        acc.append(gens)
 
-def main(bits=100,
-         population=16,
-         mutationRate= 0.6,
-         generations=9,
-         criteria: Criteria = Criteria.KEEP_FITTEST_AND_MUTATE_SELECTED):
+    gens = mean_gens(acc) if (iterations > 1) else acc[0]
 
-    gens = {}
-    fittest = [0 for _ in range(population)]
-    nums = [BinInt.create_random(bits) for _ in range(population)]
-    nums_fitness = [0 for _ in range(population)]
-
-    for gen in range(generations):
-        for i in range(len(nums)):
-            nums[i] = mutate(nums[i], mutationRate)
-            nums_fitness[i] = fitness(nums[i])
-
-        fittest[gen] = max(range(population), key=nums_fitness.__getitem__)
-
-        gens[gen] = {
-            "nums": nums,
-            "numsFitness": nums_fitness,
-            "fittestIdx": fittest[gen]
-        }
-
-        nums = select(nums, nums_fitness, fittest[gen], criteria)
-
-        if len(nums) < population:
-            start = len(nums)
-            delta = population - start
-            selected = nums[1]
-
-            if criteria == criteria.KEEP_FITTEST_AND_MUTATE_SELECTED:
-                for _ in range(delta):
-                    nums.append()
-
-
-
+    draw.print_bin_strs(gens, bits)
+    draw.fitness_plot(gens, bits, makeXStep1=False, show=True)
 
 
 if __name__ == "__main__":
+    # random.seed(9)
     main()
