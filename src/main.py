@@ -43,11 +43,6 @@ def stats(fitnessNums: list) -> Tuple[float, tuple, float]:
     return mean, errors, math.sqrt(variance)
 
 
-def record(generation: int, gens: dict, fitnessNums: List[int], fittest: BinInt):
-    mean, errors, std = stats(fitnessNums)
-    gens[generation] = {"best": fittest.copy(), "bestFitness": max(fitnessNums), "meanFitness": mean, "std": std}
-
-
 def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Dict[str, Union[bool, int]]) -> Tuple[
     int, List[BinInt]]:
     population = len(nums)
@@ -86,7 +81,9 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
         for i in range(delta):
             newNums.append(random.choice(selected))
 
-    record(generation, gens, fitnessNums, fittest)
+    mean, errors, std = stats(fitnessNums)
+    gens[generation] = {"best": fittest, "bestFitness": max(fitnessNums), "meanFitness": mean, "std": std}
+
     return startIdx, newNums
 
 
@@ -99,6 +96,18 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
         "FITTEST_FRACTION": 0.1,
         "k": 6
     }
+
+    # Make sure parameters are set correctly
+    if (not criteria["MUTATE_FITTEST"]) and criteria["MUTATE_FITTEST"]:
+        print("FITTEST isn't keept, so 'MUTATE_FITTEST' flag will have no effect!")
+    elif criteria["MAKE_FITTEST_A_FRACTION_OF_POPULATION"]:
+        fraction = criteria["FITTEST_FRACTION"]
+        if type(criteria["FITTEST_FRACTION"]) != float:
+            raise ValueError(f"FITTEST_FRACTION needs to be of type float, not {type(criteria['FITTEST_FRACTION'])}")
+        if (fraction > 1) or (fraction < 0):
+            raise ValueError(f"'FITTEST_FRACTION' needs to be value between 0 and 1, not {fraction}")
+    elif (criteria["k"] > population) or (criteria["k"] < 0):
+        raise ValueError("k is not: 0 < k <= population")
 
     acc = []
 
