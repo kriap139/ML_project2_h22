@@ -24,7 +24,7 @@ class Selector:
         self.__calc_cumulative_weights()
 
     def __calc_cumulative_weights(self):
-        self.total = 0
+        self.total = float(0)
         self.cumulative.clear()
         for weight in self.weights:
             self.total += weight

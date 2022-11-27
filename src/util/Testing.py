@@ -2,6 +2,7 @@ import unittest
 from src.BinInt import BinInt
 from src.Selector import Selector
 import random
+import time
 
 
 class MyTestCase(unittest.TestCase):
@@ -80,34 +81,55 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(nums[i].count(), fitness)
 
     def test_Selector(self):
-        nums = [5, 1, 3, 9, 6, 8, 4, 7, 2, 10]
-        weights = [10, 13, 40, 90, 60, 70, 4, 40, 20, 50]
+        if True:
+            nums = [5, 1, 3, 9, 6, 8, 4, 7, 2, 10]
+            weights = [10, 13, 40, 90, 60, 70, 4, 40, 20, 50]
 
-        selector = Selector(nums, weights, isSorted=False)
+            selector = Selector(nums, weights, isSorted=False)
 
-        self.assertListEqual(selector.population, [4, 5, 1, 2, 3, 7, 10, 6, 8, 9])
-        self.assertListEqual(selector.weights, [4, 10, 13, 20, 40, 40, 50, 60, 70, 90])
+            self.assertListEqual(selector.population, [4, 5, 1, 2, 3, 7, 10, 6, 8, 9])
+            self.assertListEqual(selector.weights, [4, 10, 13, 20, 40, 40, 50, 60, 70, 90])
 
-        total = sum(weights)
-        probabilities = [weight / total for weight in weights]
+            total = sum(weights)
+            probabilities = [weight / total for weight in weights]
 
-        self.assertEqual(sum(probabilities), 1.0)
+            self.assertEqual(sum(probabilities), 1.0)
 
-        nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        weights = [4, 10, 13, 20, 40, 40, 50, 60, 70, 90]
+            nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            weights = [4, 10, 13, 20, 40, 40, 50, 60, 70, 90]
 
-        n = 10000000
-        selector = Selector(nums, weights)
-        result = [0 for _ in range(len(nums))]
+            n = 10000000
+            selector = Selector(nums, weights)
+            result = [0 for _ in range(len(nums))]
 
-        for _ in range(n):
-            i = selector.select()
-            result[i] += 1
+            for _ in range(n):
+                i = selector.select()
+                result[i] += 1
 
-        probs = [positives / n for positives in result]
+            probs = [positives / n for positives in result]
 
-        for i in range(len(probabilities)):
-            print(f"Probability: {probabilities[i]} Calculated: {probs[i]}")
+            for i in range(len(probabilities)):
+                print(f"Probability: {probabilities[i]} Calculated: {probs[i]}")
+
+    def tests_bit_count_vs_native(self):
+        n = 100
+        num = BinInt.create_random(n)
+
+        start = time.time()
+        c = num.count()
+        end1 = time.time() - start
+
+        start = time.time()
+        bc = num.bit_count()
+        end2 = time.time() - start
+
+        self.assertEqual(c, bc)
+
+        # print(f"count(): {end1} sec, bit_count(): {end2}")
+
+        # 100: count(): 0.00016045570373535156 sec, bit_count(): 4.0531158447265625e-06
+        # 10000: count(): 0.14647674560546875 sec, bit_count(): 3.5762786865234375e-06
+        # 100000: count(): 13.200358390808105 sec, bit_count(): 1.049041748046875e-05
 
 
 if __name__ == '__main__':

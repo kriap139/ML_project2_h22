@@ -6,7 +6,7 @@ import math
 import random
 
 
-def mean_gens(acc: List[Dict[int, dict]]) -> Dict[int, dict]:
+def mean_gens(acc: List[Dict[int, dict]], decimals: int = 3) -> Dict[int, dict]:
     generations = len(acc[0].keys())
     gens = {gen: dict(best=None, bestFitness=0, meanFitness=0, std=0) for gen in range(generations)}
 
@@ -46,7 +46,7 @@ def stats(fitnessNums: list) -> Tuple[float, tuple, float]:
 def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Dict[str, Union[bool, int]]) -> Tuple[
     int, List[BinInt]]:
     population = len(nums)
-    fitnessNums = [num.count() for num in nums]
+    fitnessNums = [num.bit_count() for num in nums]
     fittest = nums[argmax(fitnessNums)]
     selector = Selector(nums, fitnessNums, isSorted=False)
 
@@ -87,7 +87,7 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
     return startIdx, newNums
 
 
-def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=1):
+def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=6):
     criteria = {
         "KEEP_FITTEST": True,
         "MUTATE_FITTEST": True,

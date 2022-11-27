@@ -39,8 +39,14 @@ def fitness_plot(data: Dict[int, dict], bits: int, makeXStep1=False, show=False)
 
 def print_bin_strs(data: Dict[int, dict], bits: int):
     gens = tuple(data.values())
+    fitness = [gen['best'].bit_count() for gen in gens]
+
     digits = len(str(len(gens))) + 1
-    bestStrings = [f"Best gen {i}:{(digits - len(str(i))) * ' '}{str(gen['best'])}" for i, gen in enumerate(gens)]
+    df = len(str(max(fitness)))
+
+    bestStrings = [
+        f"Best gen {i}(fitness={fitness[i]}):{(digits - len(str(i))) * ' ' + df * ' '}{str(gen['best'])}" for i, gen in enumerate(gens)
+    ]
 
     text = "\n".join(bestStrings)
     print(text)
