@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import markers
 
 
-def fitness_plot(data: Dict[int, dict], bits: int, makeXStep1=False, show=False):
+def fitness_plot(data: Dict[int, dict], bits: int, makeXStep1=False, show=False, savePath=None):
 
     gens = tuple(data.values())
     generations = len(tuple(data.keys()))
@@ -32,6 +32,9 @@ def fitness_plot(data: Dict[int, dict], bits: int, makeXStep1=False, show=False)
 
     plt.ylim(0, bits)
     plt.legend()
+
+    if savePath is not None:
+        plt.savefig(f'{savePath}.png', bbox_inches='tight')
 
     if show:
         plt.show()

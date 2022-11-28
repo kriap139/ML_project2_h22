@@ -2,8 +2,13 @@ import src.util.drawing as draw
 from typing import List, Tuple, Union, Dict
 from src.BinInt import BinInt
 from src.Selector import Selector, argmax
+import src.util.io as uio
 import math
 import random
+import os
+
+PLOTS_DIR = "results/plots/"
+DATA_FILE_PATH = "results/results.json"
 
 
 def mean_gens(acc: List[Dict[int, dict]], decimals: int = 3) -> Dict[int, dict]:
@@ -87,7 +92,7 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
     return startIdx, newNums
 
 
-def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=6):
+def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=6, save: bool = True):
     criteria = {
         "KEEP_FITTEST": True,
         "MUTATE_FITTEST": True,
@@ -96,6 +101,8 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
         "FITTEST_FRACTION": 0.1,
         "k": 6
     }
+
+    uio.init(PLOTS_DIR, DATA_FILE_PATH)
 
     # Make sure parameters are set correctly
     if (not criteria["MUTATE_FITTEST"]) and criteria["MUTATE_FITTEST"]:
@@ -128,7 +135,23 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
     gens = mean_gens(acc) if (iterations > 1) else acc[0]
 
     draw.print_bin_strs(gens, bits)
-    draw.fitness_plot(gens, bits, makeXStep1=False, show=True)
+
+    if save:
+        configData = {
+            "bits": bits,
+            "population": population,
+            "generations": generations,
+            "mutationRate": mutationRate,
+            "iterations": iterations,
+            "criteria": criteria
+        }
+        saveData = dict(config=configData, results=gens)
+        saveID = uio.saveData(saveData, DATA_FILE_PATH, indent=3)
+        savePath = os.path.join(PLOTS_DIR, str(saveID))
+    else:
+        savePath = None
+
+    draw.fitness_plot(gens, bits, makeXStep1=False, show=True, savePath=savePath)
 
 
 if __name__ == "__main__":
