@@ -59,12 +59,14 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
     delta = population
     unique = criteria["ENSURE_UNIQUE"]
     newNums = []
+    k = criteria["k"]
 
     if criteria["KEEP_FITTEST"]:
         if criteria["MUTATE_FITTEST"]:
             startIdx = 1
 
         newNums.append(fittest)
+        delta -= 1
 
         if criteria["MAKE_FITTEST_A_FRACTION_OF_POPULATION"]:
             children = round(population * criteria["FITTEST_FRACTION"])
@@ -72,34 +74,44 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
             for i in range(children):
                 newNums.append(fittest)
 
-    selected = selector.select(criteria["k"], unique=unique)
+            if k > delta:
+                k = delta
+
+    selected = selector.select(k, unique=unique)
 
     if type(selected) == BinInt:
         delta -= 1
         newNums.append(selected)
-
         for i in range(delta):
             newNums.append(selected)
     else:
         delta -= len(selected)
         newNums.extend(selected)
-        for i in range(delta):
-            newNums.append(random.choice(selected))
+
+        if criteria["MUTATE_FITTEST"] and not criteria["KEEP_FITTEST"]:
+            ft = [num.bit_count() for num in selected]
+            selectedFittest = selected[argmax(ft)]
+            for i in range(delta):
+                newNums.append(selectedFittest)
+        else:
+            for i in range(delta):
+                newNums.append(random.choice(selected))
 
     mean, errors, std = stats(fitnessNums)
     gens[generation] = {"best": fittest, "bestFitness": max(fitnessNums), "meanFitness": mean, "std": std}
 
     return startIdx, newNums
 
+# bits=100, population=30, mutationRate=0.01, generations=60, k=6
 
-def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=30, save: bool = False):
+def main(bits=100, population=30, mutationRate=0.01, generations=60, iterations=30, save: bool = False):
     criteria = {
         "KEEP_FITTEST": False,
         "MUTATE_FITTEST": True,
         "MAKE_FITTEST_A_FRACTION_OF_POPULATION": False,
-        "ENSURE_UNIQUE": False,
-        "FITTEST_FRACTION": 0.1,
-        "k": 6
+        "ENSURE_UNIQUE": True,
+        "FITTEST_FRACTION": 0.5,
+        "k": 13
     }
 
     uio.init(PLOTS_DIR, DATA_FILE_PATH)
@@ -150,7 +162,7 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
     else:
         savePath = None
 
-    draw.fitness_plot(gens, bits, makeXStep1=False, show=True, savePath=savePath)
+    draw.fitness_plot(gens, bits, iterations, makeXStep1=False, show=True, savePath=savePath)
 
 
 if __name__ == "__main__":
