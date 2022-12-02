@@ -92,11 +92,11 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
     return startIdx, newNums
 
 
-def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=6, save: bool = True):
+def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations=30, save: bool = False):
     criteria = {
-        "KEEP_FITTEST": True,
+        "KEEP_FITTEST": False,
         "MUTATE_FITTEST": True,
-        "MAKE_FITTEST_A_FRACTION_OF_POPULATION": True,
+        "MAKE_FITTEST_A_FRACTION_OF_POPULATION": False,
         "ENSURE_UNIQUE": False,
         "FITTEST_FRACTION": 0.1,
         "k": 6
@@ -112,7 +112,7 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
         if type(criteria["FITTEST_FRACTION"]) != float:
             raise ValueError(f"FITTEST_FRACTION needs to be of type float, not {type(criteria['FITTEST_FRACTION'])}")
         if (fraction > 1) or (fraction < 0):
-            raise ValueError(f"'FITTEST_FRACTION' needs to be value between 0 and 1, not {fraction}")
+            raise ValueError(f"'FITTEST_FRACTION' needs to be a value between 0 and 1, not {fraction}")
     elif (criteria["k"] > population) or (criteria["k"] < 0):
         raise ValueError("k is not: 0 < k <= population")
 
@@ -133,7 +133,6 @@ def main(bits=100, population=60, mutationRate=0.016, generations=60, iterations
         acc.append(gens)
 
     gens = mean_gens(acc) if (iterations > 1) else acc[0]
-
     draw.print_bin_strs(gens, bits)
 
     if save:

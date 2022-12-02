@@ -91,8 +91,7 @@ class MyTestCase(unittest.TestCase):
             self.assertListEqual(selector.weights, [4, 10, 13, 20, 40, 40, 50, 60, 70, 90])
 
             total = sum(weights)
-            probabilities = [weight / total for weight in weights]
-
+            probabilities = [weight / float(total) for weight in weights]
             self.assertEqual(sum(probabilities), 1.0)
 
             nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -103,13 +102,15 @@ class MyTestCase(unittest.TestCase):
             result = [0 for _ in range(len(nums))]
 
             for _ in range(n):
-                i = selector.select()
+                i = selector.select(unique=True)
                 result[i] += 1
 
-            probs = [positives / n for positives in result]
+            total = sum(weights)
+            probabilities = [weight / float(total) for weight in weights]
+            probs = [positives / float(n) for positives in result]
 
-            for i in range(len(probabilities)):
-                print(f"Probability: {probabilities[i]} Calculated: {probs[i]}")
+            for i in range(len(weights)):
+                print(f"Probability: {round(probabilities[i], 4)} Calculated: {round(probs[i], 4)}")
 
     def tests_bit_count_vs_native(self):
         n = 100
