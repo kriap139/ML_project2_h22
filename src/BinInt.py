@@ -1,11 +1,18 @@
 import random
 from typing import Union, Iterable, Tuple, List
+from src.Selector import Selector
 
 
 class BinInt(int):
-    def __new__(cls, x):
-        instance = int.__new__(cls, x, base=2)
-        instance.__length = len(x)
+    BITS = 8
+    BITS_MAX = 2**BITS - 1
+
+    def __new__(cls, x, length: int):
+        if type(x) == int:
+            instance = int.__new__(cls, x)
+        else:
+            instance = int.__new__(cls, x, base=2)
+        instance.__length = length
         return instance
 
     def __str__(self) -> str:
@@ -59,7 +66,7 @@ class BinInt(int):
 
     def copy(self) -> "BinInt":
         s = self.__to_bin_str(self, self.length())
-        return BinInt(s)
+        return BinInt(s, self.length())
 
     @staticmethod
     def mutate(num: "BinInt", flipRate: float) -> "BinInt":
@@ -83,14 +90,20 @@ class BinInt(int):
     def _mutated(cls, old: "BinInt", new: Union["BinInt", int]) -> "BinInt":
         if type(new) != BinInt:
             s = cls.__to_bin_str(new, old.length())
-            new = BinInt(s)
+            new = BinInt(s, old.length())
         return new
 
     @classmethod
-    def create_random(cls, length: int) -> "BinInt":
-        s = cls.random_bit_str(length)
-        return cls(s)
+    def create_random(cls, bits: int, threshold=0.1) -> "BinInt":
+        chars = []
+        for _ in range(bits):
+            if random.random() < threshold:
+                chars.append('1')
+            else:
+                chars.append('0')
+        return cls("".join(chars), bits)
 
     @classmethod
-    def random_bit_str(cls, length: int) -> str:
-        return "".join([random.choice(seq=('0', '1')) for _ in range(length)])
+    def create_random_arr(cls, bits: int, length: int, highThreshold: float = 0.4) -> List["BinInt"]:
+        thresholds = [random.uniform(0.0, highThreshold) for _ in range(length)]
+        return [cls.create_random(bits, thresholds[i]) for i in range(length)]
