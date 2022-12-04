@@ -15,7 +15,9 @@ def fitness_plot(data: Dict[int, dict], bits: int, iterations: int, makeXStep1=F
     meanFitness = tuple(gen["meanFitness"] for gen in gens)
     sds = tuple(gen["std"] for gen in gens)
 
-    print(f"Best: {max(best)}\nLast gen bestFitness: {bestFitness[-1]}\nLast gen meanFitness: {meanFitness[-1]}\nLast gen SDS: {sds[-1]}")
+    if printInfo:
+        print(f"Last gen Best: {best[-1]}\nLast gen bestFitness (Avg): {bestFitness[-1]}\nLast gen meanFitness (Avg): {meanFitness[-1]}\nLast gen SDS (Avg): {sds[-1]}")
+        print(f"\nBest: {max(best)}\nbestFitness (Avg): {max(bestFitness)}\nmeanFitness (Avg): {max(meanFitness)}\nSDS (Avg): {max(sds)}")
 
     plt.figure(figsize=(20, 5))
     plt.subplot()
@@ -23,7 +25,8 @@ def fitness_plot(data: Dict[int, dict], bits: int, iterations: int, makeXStep1=F
     plt.xlabel("Generations")
     plt.ylabel("Fitness")
 
-    plt.plot(best, marker="o", markersize=6, markerfacecolor="goldenrod", color="goldenrod", label="Best")
+    if iterations > 1:
+        plt.plot(best, marker="o", markersize=6, markerfacecolor="goldenrod", color="goldenrod", label="Best")
 
     plt.plot(bestFitness, marker="o", markersize=7, markerfacecolor="mediumseagreen", color="mediumseagreen", label="Avg Best")
 
@@ -50,7 +53,7 @@ def fitness_plot(data: Dict[int, dict], bits: int, iterations: int, makeXStep1=F
         plt.show()
 
 
-def print_bin_strs(data: Dict[int, dict], bits: int):
+def print_bin_strs(data: Dict[int, dict], iterations: int):
     gens = tuple(data.values())
     fitness = [gen['best'].bit_count() for gen in gens]
 
@@ -63,3 +66,9 @@ def print_bin_strs(data: Dict[int, dict], bits: int):
 
     text = "\n".join(bestStrings)
     print(text, end='\n\n')
+
+    if iterations > 1:
+        print("Gen0Stats: ")
+        for i, d in enumerate(gens[0]["gen0Stats"]):
+            print(f"\tIteration {i}: {d}")
+        print()

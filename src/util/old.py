@@ -73,3 +73,4 @@ def selectCriteria(generation: int, gens: dict, nums: List[BinInt], criteria: Di
     gens[generation] = {"best": fittest, "bestFitness": max(fitnessNums), "meanFitness": mean, "std": std}
 
     return startIdx, newNums
+

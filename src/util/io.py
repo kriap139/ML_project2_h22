@@ -18,7 +18,7 @@ def saveData(data: dict, dataFilePath: str, indent=3, sortKeys=False) -> str:
     with open(dataFilePath, mode='r') as f:
         d: dict = json.load(f)
 
-    saveId = int(max(d.keys())) + 1 if len(d.keys()) else 0
+    saveId = int(max(d.keys())) + 1 if len(d.keys()) else 1
     d[saveId] = data
 
     with open(dataFilePath, mode='w') as f:

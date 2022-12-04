@@ -84,8 +84,9 @@ class MyTestCase(unittest.TestCase):
         if True:
             nums = [5, 1, 3, 9, 6, 8, 4, 7, 2, 10]
             weights = [10, 13, 40, 90, 60, 70, 4, 40, 20, 50]
+            nums, weights = Selector.sort(nums, weights)
 
-            selector = Selector(nums, weights, isSorted=False)
+            selector = Selector(nums, weights)
 
             self.assertListEqual(selector.population, [4, 5, 1, 2, 3, 7, 10, 6, 8, 9])
             self.assertListEqual(selector.weights, [4, 10, 13, 20, 40, 40, 50, 60, 70, 90])
@@ -98,11 +99,11 @@ class MyTestCase(unittest.TestCase):
             weights = [4, 10, 13, 20, 40, 40, 50, 60, 70, 90]
 
             n = 10000000
-            selector = Selector(nums, weights)
+            selector = Selector(nums, weights, unique=True)
             result = [0 for _ in range(len(nums))]
 
             for _ in range(n):
-                i = selector.select(unique=True)
+                i = selector.select()
                 result[i] += 1
 
             total = sum(weights)
