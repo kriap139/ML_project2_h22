@@ -145,10 +145,10 @@ def selection4(nums: List[BinInt], fittest: BinInt, fitnessNums: List[int], data
     # k=6, unique=False, ff=0.3
 
 
-def main(bits=1000, population=25, mutationRate=0.009, generations=90, iterations=30, save: bool = False):
+def main(bits=100, population=25, mutationRate=0.009, generations=90, iterations=5, save: bool = True):
     data = SelectionData(k=6, population=population, unique=False, ff=0.3)
 
-    selectionFunc = selection1
+    selectionFunc = selection3
     acc = []
 
     for _ in range(iterations):
